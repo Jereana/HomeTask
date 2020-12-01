@@ -1,0 +1,96 @@
+package com.yeremenko.myProject.views;
+
+import com.yeremenko.myProject.model.PBRate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+
+public class RateView {
+
+    private String bank;
+    private String currency;
+    private int currencyCode;
+    private String date;
+    private double saleRate;
+    private double purchaseRate;
+    public String errorText;
+    public List<Map<String, Object>> ratesData;
+
+    public RateView(String bank, String currency, int currencyCode, String date, double saleRate, double purchaseRate, String errorText) {
+        this.bank = bank;
+        this.currency = currency;
+        this.currencyCode = currencyCode;
+        this.date = date;
+        this.saleRate = saleRate;
+        this.purchaseRate = purchaseRate;
+        this.errorText = errorText;
+    }
+
+    public RateView(String bank, String currency, String date, List<Map<String, Object>> ratesData) {
+        this.bank = bank;
+        this.currency = currency;
+        this.date = date;
+        this.ratesData = ratesData;
+    }
+
+    public RateView(String bank) {
+    }
+
+    public String getBank() {
+        return bank;
+    }
+
+    public void setBank(String bank) {
+        this.bank = bank;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public double getSaleRate() {
+        return saleRate;
+    }
+
+    public void setSaleRate(double saleRate) {
+        this.saleRate = saleRate;
+    }
+
+    public double getPurchaseRate() {
+        return purchaseRate;
+    }
+
+    public void setPurchaseRate(double purchaseRate) {
+        this.purchaseRate = purchaseRate;
+    }
+
+    public int getCurrencyCode() {
+        return currencyCode;
+    }
+
+    public void setCurrencyCode(int currencyCode) {
+        this.currencyCode = currencyCode;
+    }
+
+    public List<Map<String, Object>> getRatesData() {
+        return ratesData;
+    }
+
+    public void setRatesData(List<Map<String, Object>> ratesData) {
+        this.ratesData = ratesData;
+    }
+}
