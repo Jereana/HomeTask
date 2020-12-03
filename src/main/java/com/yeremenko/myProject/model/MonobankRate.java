@@ -1,13 +1,12 @@
 package com.yeremenko.myProject.model;
 
-
-import com.yeremenko.myProject.CurrencyHelper;
-
 import java.sql.Timestamp;
+import java.util.Date;
 
 public class MonobankRate {
 
-    public Timestamp date;
+    public Timestamp timestamp;
+    public String date;
     public double rateBuy;
     public double rateSell;
     public String currency; // валюта
@@ -16,7 +15,7 @@ public class MonobankRate {
     public String errorText;
 
 
-    public MonobankRate(Timestamp date, double rateBuy, double rateSell, int currencyCodeA) {
+    public MonobankRate(String date, double rateBuy, double rateSell, int currencyCodeA) {
         this.date = date;
         this.rateBuy = rateBuy;
         this.rateSell = rateSell;
@@ -26,15 +25,22 @@ public class MonobankRate {
     public MonobankRate() {
     }
 
+    public MonobankRate(String date, String currency, int currencyCode, String errorText) {
+        this.date = date;
+        this.currency = currency;
+        this.currencyCodeA = currencyCode;
+        this.errorText = errorText;
+    }
+
     public static String getBank() {
         return bankName;
     }
 
-    public Timestamp getDate() {
+    public String getDate() {
         return date;
     }
 
-    public void setDate(Timestamp date) {
+    public void setDate(String date) {
         this.date = date;
     }
 

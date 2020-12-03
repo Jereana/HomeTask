@@ -7,6 +7,7 @@ import com.yeremenko.myProject.CurrencyHelper;
 import com.yeremenko.myProject.CurrencyService;
 import com.yeremenko.myProject.JsonUtils;
 import com.yeremenko.myProject.RateMapper;
+import com.yeremenko.myProject.model.MonobankRate;
 import com.yeremenko.myProject.model.PBRate;
 import com.yeremenko.myProject.views.RateView;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -25,19 +26,32 @@ public class PrivateBank implements CurrencyService {
 
     @Override
     public RateView getRateFor(Date date, String currency) {
-        String dateStr = convertDateToString(date);
+        String dateStr = CurrencyHelper.convertDateToString(date,"dd.MM.yyyy");
 
         try {
             String url = String.format("%s?json&date=%s&currency=%s",BASE_URL, dateStr,currency);
             HttpResponse<String> response = Unirest.get(url)
                         .queryString("date", dateStr).asString();
             PBRate pbRate = JsonUtils.parseJsonWithJackson(response.getBody(), PBRate.class);
-            if (currency != null & pbRate!=null) {
+
+            //Проверка: если на дату нет вообще никаких курсов, например в 00:00+
+            if (pbRate != null) {
+                if (currency == null) {
+                    currency = "USD";
+                }
                 pbRate.setCurrency(currency);
-                pbRate.setCurrencyCode(CurrencyHelper.getCurrencyCode(currency));
+                int currencyCode = CurrencyHelper.getCurrencyCode(currency);
+                pbRate.setCurrencyCode(currencyCode);
+                if(currencyCode==0){
+                    pbRate.setErrorText("No rate for currency " + currency + ". ");  // если указана некорректная валюта
+                }
+            } else {
+                pbRate = new PBRate();
+                pbRate.setCurrency(currency);
+                pbRate.setDate(dateStr);
+                pbRate.setErrorText("No rate for date " + dateStr + ". ");
             }
             return RateMapper.from(pbRate);
-
             } catch (UnirestException e) {
             e.printStackTrace();
         }
@@ -46,28 +60,12 @@ public class PrivateBank implements CurrencyService {
     }
 
     @Override
-    public RateView[] getRateArrayFor(Date dateFrom, Date dateTo, String currency) {
-        return new RateView[0];
-    }
-
-    @Override
     public RateView getBestRate(Date dateFrom, Date dateTo, String currency) {
         return null;
     }
-/*
-    private static String convertDateToString(Date date) {
-        String dateStr;
-        if (date == null) {
-            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-            LocalDate localDate = LocalDate.now();
-            dateStr = dtf.format(localDate);
-        } else {
-            dateStr = date.toString();
-        }
-        return dateStr;
-    }*/
 
-    private static String convertDateToString(Date date) {
+    /*
+    public static String convertDateToString(Date date) {
         LocalDate localDate;
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -77,5 +75,5 @@ public class PrivateBank implements CurrencyService {
             localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         }
         return dtf.format(localDate);
-    }
+    }*/
 }

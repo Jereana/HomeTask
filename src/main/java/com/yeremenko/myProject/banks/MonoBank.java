@@ -10,6 +10,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Date;
 @Qualifier("mono")
@@ -17,25 +21,32 @@ import java.util.Date;
 public class MonoBank implements CurrencyService {
     public static final String BASE_URL = "https://api.monobank.ua/bank/currency";
 
-
     @Override
     public RateView getRateFor(Date date, String currency) {
-
-        MonobankRate monobankRate = parseCurrentExchangeRateRestTemplate(currency);
-        if (monobankRate != null) {
-            monobankRate.setCurrency(currency);
-            monobankRate.setCurrencyCode(CurrencyHelper.getCurrencyCode(currency));
-        } else {
-            monobankRate = new MonobankRate();
-            monobankRate.setCurrency(currency);
-            monobankRate.errorText = "No rate for currency " + currency;
+        // добавить условие, что если дата!=текущей дате, то return null
+        MonobankRate monobankRate;
+        int currencyCode;
+        if (currency == null) {
+            currency = "USD"; // по умолчанию. Возможно сделать пропертю отдельную для этого
         }
-        return RateMapper.from(monobankRate);
-    }
+        currencyCode = CurrencyHelper.getCurrencyCode(currency);
+        String dateStr = CurrencyHelper.convertDateToString(date,"dd.MM.yyyy");
 
-    @Override
-    public RateView[] getRateArrayFor(Date dateFrom, Date dateTo, String currency) {
-        return new RateView[0];
+        //Date currentDate = parseDateToFormat(Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+
+        //if (!currentDate.equals(date)){
+      //      monobankRate = new MonobankRate(dateStr, currency, currencyCode, "No rate for date" + dateStr);
+     //   } else {
+            monobankRate = parseCurrentExchangeRateRestTemplate(currencyCode);
+            if (monobankRate != null) {
+                monobankRate.setCurrency(currency);
+                monobankRate.setCurrencyCode(currencyCode);
+                monobankRate.setDate(dateStr);
+            } else
+                monobankRate = new MonobankRate(dateStr, currency, currencyCode, "No rate for currency " + currency);
+
+       // }
+        return RateMapper.from(monobankRate);
     }
 
     @Override
@@ -43,21 +54,13 @@ public class MonoBank implements CurrencyService {
         return null;
     }
 
-    //rest template
-    private static MonobankRate parseCurrentExchangeRateRestTemplate(String currency) {
+    private static MonobankRate parseCurrentExchangeRateRestTemplate(int currencyCode) {
         RestTemplate restTemplate = new RestTemplate();
-        int currencyCode = 0;
-        if (currency != null) {
-            currencyCode = CurrencyHelper.getCurrencyCode(currency);
-        }
         try {
             MonobankRate[] monobankRateArray = restTemplate.getForObject(BASE_URL, MonobankRate[].class);
-
             if (monobankRateArray != null) {
-
-                int finalCurrencyCode = currencyCode;
                 return Arrays.stream(monobankRateArray).
-                        filter(rate -> rate.getCurrencyCodeA()==finalCurrencyCode)
+                        filter(rate -> rate.getCurrencyCodeA()== currencyCode)
                         .findAny().orElse(null);
             }
         } catch (RestClientResponseException e) {
@@ -65,6 +68,15 @@ public class MonoBank implements CurrencyService {
             MonobankRate mbRate = new MonobankRate();
             mbRate.setErrorText(e.getMessage());
             return mbRate;
+        }
+        return null;
+    }
+
+    private static Date parseDateToFormat(Date date){
+        try {
+            return new SimpleDateFormat("dd.MM.yyyy").parse(date.toString());
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
         return null;
     }

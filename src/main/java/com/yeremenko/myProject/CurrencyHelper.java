@@ -1,5 +1,9 @@
 package com.yeremenko.myProject;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +22,10 @@ public class CurrencyHelper {
         CURRENCY_CODES_MAP.put("PLN", 985);
     }
 
+    public static String getCurrencyText(int cc){
+
+        return null;
+    }
     public static int getCurrencyCode(String currency){
         if (currency == null) {
             return 0;
@@ -29,4 +37,15 @@ public class CurrencyHelper {
         return CURRENCY_CODES_MAP.get(currency.toUpperCase());
     }
 
+    public static String convertDateToString(Date date, String format){
+        LocalDate localDate;
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern(format);
+        if (date == null) {
+            localDate = LocalDate.now();
+        } else {
+            localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        }
+        return dtf.format(localDate);
+    }
 }

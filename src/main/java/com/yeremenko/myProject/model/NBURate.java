@@ -1,12 +1,6 @@
 package com.yeremenko.myProject.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.json.JSONArray;
-
-import java.math.BigDecimal;
-import java.sql.Timestamp;
-import java.util.List;
-import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NBURate {
@@ -17,8 +11,6 @@ public class NBURate {
     public String currency; // валюта буквы
     public int currencyCode; // код валюты
     public String errorText;
-    public List<Map<String, Object>> ratesData;
-   // public JSONArray exchangeRate;
 
     public NBURate(String exchangeDate, double rate, String currency, int currencyCode) {
         this.exchangeDate = exchangeDate;
@@ -27,12 +19,9 @@ public class NBURate {
         this.currencyCode = currencyCode;
     }
 
-    public NBURate(String exchangeDate, List<Map<String, Object>> ratesData) {
+    public NBURate(String exchangeDate, String currency, String errorText) {
         this.exchangeDate = exchangeDate;
-        this.ratesData = ratesData;
-    }
-
-    public NBURate(String errorText) {
+        this.currency = currency;
         this.errorText = errorText;
     }
 
@@ -82,14 +71,6 @@ public class NBURate {
 
     public void setCurrencyCode(int currencyCode) {
         this.currencyCode = currencyCode;
-    }
-
-    public List<Map<String, Object>> getRatesData() {
-        return ratesData;
-    }
-
-    public void setRatesData(List<Map<String, Object>> ratesData) {
-        this.ratesData = ratesData;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

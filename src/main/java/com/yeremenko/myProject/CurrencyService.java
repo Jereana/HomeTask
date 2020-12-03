@@ -8,7 +8,5 @@ public interface CurrencyService {
 
     RateView getRateFor(Date date, String currency);
 
-    RateView[] getRateArrayFor(Date dateFrom, Date dateTo, String currency); // реализовать в каждом банке.
-
     RateView getBestRate(Date dateFrom, Date dateTo, String currency); // реализовать в каждом банке.
 }

@@ -101,27 +101,5 @@ public class JsonUtils {
         return null;
     //}
 */
-    /*
-    //rest template
-    private static MonobankRate parseCurrentExchangeRateRestTemplate(String currency) {
-        RestTemplate restTemplate = new RestTemplate();
 
-        try {
-            MonobankRate[] monobankRateArray = restTemplate.getForObject(BASE_URL, MonobankRate[].class);
-            if (monobankRateArray != null) {
-                return Arrays.stream(monobankRateArray).
-                        filter(rate -> rate.
-                                getCurrencyCodeA().
-                                equals("840")).//USD код = 840
-                        findAny().orElse(null);
-            }
-        } catch (RestClientResponseException e) {
-            e.printStackTrace();
-            MonobankRate mbRate = new MonobankRate();
-            mbRate.setErrorText(e.getMessage());
-            return mbRate;
-        }
-        return null;
-    }
-*/
 }
