@@ -2,6 +2,7 @@ package com.yeremenko.myProject.banks;
 
 import com.yeremenko.myProject.CurrencyHelper;
 import com.yeremenko.myProject.CurrencyService;
+import com.yeremenko.myProject.DateHelper;
 import com.yeremenko.myProject.RateMapper;
 import com.yeremenko.myProject.model.MonobankRate;
 import com.yeremenko.myProject.views.RateView;
@@ -10,33 +11,28 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.Date;
+import java.util.*;
+
+import static com.yeremenko.myProject.DateHelper.stringToDate;
+
 @Qualifier("mono")
 @Component
 public class MonoBank implements CurrencyService {
     public static final String BASE_URL = "https://api.monobank.ua/bank/currency";
-
+    public static final String DATE_FORMAT = "dd.MM.yyyy";
     @Override
     public RateView getRateFor(Date date, String currency) {
-        // добавить условие, что если дата!=текущей дате, то return null
         MonobankRate monobankRate;
-        int currencyCode;
-        if (currency == null) {
-            currency = "USD"; // по умолчанию. Возможно сделать пропертю отдельную для этого
-        }
-        currencyCode = CurrencyHelper.getCurrencyCode(currency);
-        String dateStr = CurrencyHelper.convertDateToString(date,"dd.MM.yyyy");
+        int currencyCode = CurrencyHelper.getCurrencyCode(currency);
+        String dateStr = DateHelper.convertDateToString(date, DATE_FORMAT);
+        Date parameterDate;
+        Date todayDate;
+        parameterDate = stringToDate(dateStr);
+        todayDate = stringToDate(DateHelper.convertDateToString(null, DATE_FORMAT));
 
-        //Date currentDate = parseDateToFormat(Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()));
-
-        //if (!currentDate.equals(date)){
-      //      monobankRate = new MonobankRate(dateStr, currency, currencyCode, "No rate for date" + dateStr);
-     //   } else {
+        if (!todayDate.equals(parameterDate)) {
+            monobankRate = new MonobankRate(dateStr, currency, currencyCode, "No rate for date " + dateStr);
+        } else {
             monobankRate = parseCurrentExchangeRateRestTemplate(currencyCode);
             if (monobankRate != null) {
                 monobankRate.setCurrency(currency);
@@ -44,14 +40,29 @@ public class MonoBank implements CurrencyService {
                 monobankRate.setDate(dateStr);
             } else
                 monobankRate = new MonobankRate(dateStr, currency, currencyCode, "No rate for currency " + currency);
-
-       // }
+        }
         return RateMapper.from(monobankRate);
     }
 
     @Override
-    public RateView getBestRate(Date dateFrom, Date dateTo, String currency) {
-        return null;
+    public List<RateView> getBestRate(Date dateFrom, Date dateTo, String currency, int lastDaysCount) {
+
+        List<RateView> ratesList = new ArrayList<>();
+        // возвращать только, если заполнено значение lastDaysCount
+        // или текущая дата лежит в промежутке [dateFrom; dateTo]
+        String todayDateStr = DateHelper.convertDateToString(null,DATE_FORMAT);
+        Date todayDate = stringToDate(todayDateStr);
+        Boolean dateIsInPeriod = DateHelper.checkDateIsInPeriod(dateFrom, dateTo, todayDate);
+        if ((lastDaysCount > 0) || dateIsInPeriod){
+            RateView rateView = getRateFor(todayDate, currency);
+            ratesList.add(rateView);
+            System.out.println("Bank: " + rateView.getBank() +
+                    "; Date: " + rateView.getDate() +
+                    "; Currency: " + rateView.getCurrency() +
+                    "; Rate: " + rateView.getSaleRate());
+            System.out.println("_______________________");
+        }
+        return ratesList;
     }
 
     private static MonobankRate parseCurrentExchangeRateRestTemplate(int currencyCode) {
@@ -68,15 +79,6 @@ public class MonoBank implements CurrencyService {
             MonobankRate mbRate = new MonobankRate();
             mbRate.setErrorText(e.getMessage());
             return mbRate;
-        }
-        return null;
-    }
-
-    private static Date parseDateToFormat(Date date){
-        try {
-            return new SimpleDateFormat("dd.MM.yyyy").parse(date.toString());
-        } catch (ParseException e) {
-            e.printStackTrace();
         }
         return null;
     }

@@ -2,6 +2,7 @@ package com.yeremenko.myProject.banks;
 
 import com.yeremenko.myProject.CurrencyHelper;
 import com.yeremenko.myProject.CurrencyService;
+import com.yeremenko.myProject.DateHelper;
 import com.yeremenko.myProject.RateMapper;
 import com.yeremenko.myProject.model.NBURate;
 import com.yeremenko.myProject.views.RateView;
@@ -10,9 +11,6 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static com.yeremenko.myProject.JsonUtils.parseUrl;
@@ -30,56 +28,67 @@ public class NBU implements CurrencyService {
     }
 
     @Override
-    public RateView getBestRate(Date dateFrom, Date dateTo, String currency) {
-        //List<RateView> rates = new ArrayList<>();
-        return null;
+    public List<RateView> getBestRate(Date dateFrom, Date dateTo, String currency, int lastDaysCount) {
+        List<RateView> ratesList = new ArrayList<>();
+        List<Date> datesList = DateHelper.getDatesList(lastDaysCount, dateFrom, dateTo);
+        List<RateView> minRatesList = new ArrayList<>();
+
+        for (Date date : datesList) {
+            RateView rateView = getRateFor(date, currency);
+            ratesList.add(rateView);
+        }
+
+        double minSaleRate = 1000;
+        System.out.println("All list of NBU rates:");
+        for (RateView rate : ratesList) {
+
+            System.out.println("Bank: " + rate.getBank() +
+                    "; Date: " + rate.getDate() +
+                    "; Currency: " + rate.getCurrency() +
+                    "; Rate: " + rate.getSaleRate());
+
+            if (minSaleRate == rate.getSaleRate()) {
+                minRatesList.add(rate);
+                minSaleRate = rate.getSaleRate();
+            } else if (minSaleRate > rate.getSaleRate()) {
+                minRatesList.clear();
+                minRatesList.add(rate);
+                minSaleRate = rate.getSaleRate();
+            }
+
+        }
+        System.out.println("_______________________");
+
+        return minRatesList;
     }
 
-    private NBURate parseCurrentExchangeRateJson(Date date, String currency) {
-        String dateStr = convertDate(date);
-        //по умолчанию выводим для $ , но можно считывать это значение с файла проперти?!
-        if (currency == null) {
-            currency = "USD";
-        }
-        int currencyCode = CurrencyHelper.getCurrencyCode(currency);
 
-        String fullUrl = String.format("%s?date=%s&json", BASE_URL, dateStr);
+    private NBURate parseCurrentExchangeRateJson(Date date, String currency) {
+        String dateStrUrl = DateHelper.convertDateToString(date, "yyyyMMdd");
+        String dateStr = DateHelper.convertDateToString(date, "dd.MM.yyyy");
+        int currencyCode = CurrencyHelper.getCurrencyCode(currency);
+        String errorText = "";
+
+        String fullUrl = String.format("%s?date=%s&json", BASE_URL, dateStrUrl);
 
         String resultJson = parseUrl(fullUrl);
         JSONArray joList = new JSONArray(resultJson);
-
-            /*----------------------------
-            //по умолчанию выводим все курсы:
-            List<Map<String, Object>> ratesData = new ArrayList<Map<String, Object>>();
-            Map<String, Object> jsonItem = new HashMap<String, Object>();
-            */
-
-                for (int i = 0; i < joList.length(); i++) {
-                    JSONObject objects = joList.getJSONObject(i);
-                    if (objects.get("r030").equals(currencyCode)) {
-                        BigDecimal deci = (BigDecimal) objects.get("rate");
-                        double rate = deci.doubleValue();
-                        return new NBURate(objects.get("exchangedate").toString(),
-                                rate,
-                                objects.get("cc").toString(),
-                                (Integer) objects.get("r030"));
-                    }
+        if (!joList.isEmpty()) {
+            for (int i = 0; i < joList.length(); i++) {
+                JSONObject objects = joList.getJSONObject(i);
+                if (objects.get("cc").equals(currency)) {
+                    BigDecimal deci = (BigDecimal) objects.get("rate");
+                    double rate = deci.doubleValue();
+                    return new NBURate(objects.get("exchangedate").toString(),
+                            rate,
+                            objects.get("cc").toString(),
+                            (Integer) objects.get("r030"));
                 }
-
-        NBURate nbuRate= new NBURate(dateStr, currency,"No rate for currency " + currency);
-        nbuRate.setCurrency(currency);
-        return nbuRate;
-    }
-
-   public static String  convertDate(Date date) {
-        LocalDate localDate;
-
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd");
-        if (date == null) {
-            localDate = LocalDate.now();
+            }
+            errorText = "No rate for currency " + currency;
         } else {
-            localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            errorText = "No rate for date " + dateStr;
         }
-        return dtf.format(localDate);
+        return new NBURate(dateStr, currency, errorText);
     }
 }

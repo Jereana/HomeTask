@@ -1,6 +1,9 @@
 package com.yeremenko.myProject.controllers;
 
+import com.yeremenko.myProject.CurrencyHelper;
 import com.yeremenko.myProject.CurrencyService;
+import com.yeremenko.myProject.DateHelper;
+import com.yeremenko.myProject.banks.PrivateBank;
 import com.yeremenko.myProject.views.RateView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -8,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -31,59 +37,113 @@ public class ExchangeRateController {
 
     @Qualifier("nbu_xml")
     @Autowired
-    private CurrencyService nbu_xml;
+    private CurrencyService nbuXml;
 
     @GetMapping("/all")
     public List<RateView> getRates(@RequestParam(value = "date", required = false) String dateStr,
                                    @RequestParam(value = "currency", required = false) String currency,
                                    @RequestParam(value = "dateFrom", required = false) String dFrom,
-                                   @RequestParam(value = "dateTo", required = false) String dTo) throws ParseException {
+                                   @RequestParam(value = "dateTo", required = false) String dTo,
+                                   @RequestParam(value = "lastDaysCount", required = false) Integer lastDaysCount) throws ParseException {
 
-        Date date = stringToDate(dateStr);
-        Date dateFrom = stringToDate(dFrom);
-        Date dateTo = stringToDate(dTo);
-        List <Date> dateList = Arrays.asList(date, dateFrom, dateTo);
+        Date date = DateHelper.stringToDate(dateStr);
+        Date dateFrom = DateHelper.stringToDate(dFrom);
+        Date dateTo = DateHelper.stringToDate(dTo);
 
         List<RateView> ratesList = new ArrayList<>();
 
-        currency = currency==null?null:currency.toUpperCase();
+        currency = currency == null ? "USD" : currency.toUpperCase();
 
-        ratesList.add(getRatePB(date, currency, dateFrom, dateTo));
-        ratesList.add(getRateMono(date, currency));
-        ratesList.add(getRateNBU_Json(date, currency));
-        ratesList.add(getRateNBU_XML(date, currency));
+        //по умолчанию выводим для $ , но можно считывать это значение с файла проперти?!
+
+        if (lastDaysCount == null) {
+            lastDaysCount = 0;
+        }
+
+        // Здесь должна быть логика построения запросов, при задании различных параметров, согласно приоритету:
+        // date
+        // lastDaysCount
+        // dateFrom + dateTo
+
+        // 1. Если все даты null - формируем запрос на текущую дату
+        // 2. Если задана дата date формируем запрос на указанную дату.
+        //1 и 2 одно и то же.
+
+        // 3. Если date= null и задана lastDaysCount - формируем запрос за последние lastDaysCount количество дней, влючая сегодня.
+        // 4. Если date= null и lastDaysCount = null, и заданы dateFrom и dateTo - формируем запрос на период.
+        // 3-4 одно и то же, реализуется в методе PrivateBank.getBestRate
+        // начало логики
+
+        //конец логики
+
+
+        List<Date> datesList = DateHelper.getDatesList(lastDaysCount, dateFrom, dateTo);
+
+        if (datesList.size()==0) {
+
+            // на заданную дату/ на текущую дату
+            ratesList.add(privateBank.getRateFor(date, currency));
+            ratesList.add(monoBank.getRateFor(date, currency));
+            ratesList.add(nbu.getRateFor(date, currency));
+            ratesList.add(nbuXml.getRateFor(date, currency));
+
+        } else
+            if ((date == null) && (lastDaysCount!=0 || (dateFrom!=null && dateTo != null))){
+
+                ratesList.addAll(privateBank.getBestRate(dateFrom,dateTo,currency,lastDaysCount));
+                ratesList.addAll(monoBank.getBestRate(dateFrom, dateTo, currency, lastDaysCount));
+                ratesList.addAll(nbu.getBestRate(dateFrom, dateTo, currency, lastDaysCount));
+                ratesList.addAll(nbuXml.getBestRate(dateFrom, dateTo, currency, lastDaysCount));
+                }
         return ratesList;
     }
+/*
+    private List<RateView> getBestRate(Date dateFrom, Date dateTo, String currency, int lastDaysCount) {
+
+        List<RateView> ratesList = new ArrayList<>();
+        List<Date> datesList = DateHelper.getDatesList(lastDaysCount, dateFrom, dateTo);
+        List<RateView> minRatesListMono = new ArrayList<>();
+        List<RateView> minRatesListPB = new ArrayList<>();
+        List<RateView> minRatesListNBU = new ArrayList<>();
+        List<RateView> minRatesListNBUXml = new ArrayList<>();
 
 
-    public RateView getRatePB(Date date, String currency, Date dateFrom, Date dateTo) {
-     //   Date date = stringToDate(dateStr);
-     //   Date dateFrom = stringToDate(dFrom);
-     //   Date dateTo = stringToDate(dTo);
+        for (Date date : datesList) {
+            RateView rateViewMono = getRateMono(date, currency);
+            ratesList.add(rateViewMono);
 
-        List <Date> dateList = Arrays.asList(date, dateFrom, dateTo);
+            RateView rateViewPB = getRatePB(date, currency);
+        }
 
-        return privateBank.getRateFor(date, currency);
+        double minSaleRate = 1000;
+        System.out.println("All list of NBUxml rates:");
+        for (RateView rate : ratesList) {
 
+            System.out.println("Bank: " + rate.getBank() +
+                    "; Date: " + rate.getDate() +
+                    "; Currency: " + rate.getCurrency() +
+                    "; Rate: " + rate.getSaleRate());
+
+            if (minSaleRate == rate.getSaleRate()) {
+                minRatesList.add(rate);
+                minSaleRate = rate.getSaleRate();
+            } else if (minSaleRate > rate.getSaleRate()) {
+                minRatesList.clear();
+                minRatesList.add(rate);
+                minSaleRate = rate.getSaleRate();
+            }
+
+        }
+        System.out.println("_______________________");
+
+        return minRatesList;
     }
-
-    public RateView getRateMono(Date date, String currency){
-        return monoBank.getRateFor(date, currency);
-    }
-
-    public RateView getRateNBU_Json(Date date, String currency){
-        return nbu.getRateFor(date,currency);
-    }
-
-    public RateView getRateNBU_XML(Date date, String currency){
-        return nbu_xml.getRateFor(date, currency);
-    }
+*/
 
     @GetMapping("/pb")
-
     public RateView getRate(@RequestParam(value = "date", required = false) String dateStr,
                             @RequestParam(value = "currency", required = false) String currency) throws ParseException {
-        Date date = stringToDate(dateStr);
+        Date date = DateHelper.stringToDate(dateStr);
         return privateBank.getRateFor(date, currency.toUpperCase());
     }
 
@@ -97,17 +157,12 @@ public class ExchangeRateController {
     @GetMapping("/nbu")
     public RateView getRateJson(@RequestParam(value = "date", required = false) String dateStr,
                                 @RequestParam(value = "currency", required = false) String currency) throws ParseException {
-        Date date = stringToDate(dateStr);
+        Date date = DateHelper.stringToDate(dateStr);
         return nbu.getRateFor(date,currency);
 
     }
 
-    public Date stringToDate(String dateStr) throws ParseException {
-        Date date = null;
-        if (dateStr!=null){
-            date = new SimpleDateFormat("dd.MM.yyyy").parse(dateStr);
-        }
-        return date;
-    }
+
+
 
 }

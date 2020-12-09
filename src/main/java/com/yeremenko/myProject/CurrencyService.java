@@ -2,11 +2,13 @@ package com.yeremenko.myProject;
 
 import com.yeremenko.myProject.views.RateView;
 
+import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 
 public interface CurrencyService {
 
     RateView getRateFor(Date date, String currency);
 
-    RateView getBestRate(Date dateFrom, Date dateTo, String currency); // реализовать в каждом банке.
+    List<RateView> getBestRate(Date dateFrom, Date dateTo, String currency, int lastDaysCount);
 }

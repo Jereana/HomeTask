@@ -11,7 +11,7 @@ public class MonobankRate {
     public double rateSell;
     public String currency; // валюта
     public int currencyCodeA;
-    public static String bankName = "Monobank";
+    public static String bankName = "MonoBank";
     public String errorText;
 
 
