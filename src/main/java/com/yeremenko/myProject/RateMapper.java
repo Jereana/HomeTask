@@ -15,7 +15,7 @@ public class RateMapper {
         }
 
         List<PBRate.ExchangeRate> exchangeRateList = pbRate.getExchangeRate();
-        String errorText = pbRate.getErrorText()==null?"":pbRate.getErrorText();
+        String errorText = pbRate.getErrorText();
         PBRate.ExchangeRate exchangeRate;
         double saleRate = 0;
         double purchaseRate = 0;
@@ -29,6 +29,9 @@ public class RateMapper {
                 saleRate = exchangeRate.getSaleRate()==0?exchangeRate.getSaleRateNB():exchangeRate.getSaleRate();
                 purchaseRate = exchangeRate.getPurchaseRate()==0?exchangeRate.getPurchaseRateNB():exchangeRate.getPurchaseRate();
             } else {
+                if (errorText==null) {
+                    errorText = "";
+                }
                 errorText = errorText.concat(" No rate for currency " + pbRate.getCurrency() + ".");
             }
         }

@@ -26,8 +26,7 @@ public class PrivateBank implements CurrencyService {
         PBRate pbRate = new PBRate();
         try {
             String url = String.format("%s?json&date=%s", BASE_URL, dateStr);
-            HttpResponse<String> response = Unirest.get(url)
-                        .queryString("date", dateStr).asString();
+            HttpResponse<String> response = Unirest.get(url).asString();
 
             pbRate = JsonUtils.parseJsonWithJackson(response.getBody(), PBRate.class);
 
