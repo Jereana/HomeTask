@@ -4,18 +4,12 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.yeremenko.myProject.*;
-import com.yeremenko.myProject.model.MonobankRate;
 import com.yeremenko.myProject.model.PBRate;
 import com.yeremenko.myProject.views.RateView;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import java.text.ParseException;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -32,25 +26,23 @@ public class PrivateBank implements CurrencyService {
         PBRate pbRate = new PBRate();
         try {
             String url = String.format("%s?json&date=%s", BASE_URL, dateStr);
-            HttpResponse<String> response = null;
-
-                response = Unirest.get(url)
+            HttpResponse<String> response = Unirest.get(url)
                         .queryString("date", dateStr).asString();
 
             pbRate = JsonUtils.parseJsonWithJackson(response.getBody(), PBRate.class);
 
-            //Проверка: если на дату нет вообще никаких курсов, например в 00:00+
-            //if (pbRate != null) {
-            if(pbRate.exchangeRate.size() == 0)  {
+            if(pbRate != null && pbRate.exchangeRate.isEmpty())  {
                 pbRate.setErrorText("No rate for date " + dateStr + ". ");
             }
 
         } catch (UnirestException e) {
             e.printStackTrace();
         }
-        pbRate.setDate(dateStr);
-        pbRate.setCurrency(currency);
-        pbRate.setCurrencyCode(currencyCode);
+        if (pbRate!=null) {
+            pbRate.setDate(dateStr);
+            pbRate.setCurrency(currency);
+            pbRate.setCurrencyCode(currencyCode);
+        }
 
         return RateMapper.from(pbRate);
     }
@@ -68,14 +60,8 @@ public class PrivateBank implements CurrencyService {
         }
 
         double minSaleRate = 1000;
-        System.out.println("All list of PrivateBank rates:");
+
         for (RateView rate : ratesList) {
-
-            System.out.println("Bank: " + rate.getBank() +
-                    "; Date: " + rate.getDate() +
-                    "; Currency: " + rate.getCurrency() +
-                    "; Rate: " + rate.getSaleRate());
-
             if (minSaleRate == rate.getSaleRate()) {
                 minRatesList.add(rate);
                 minSaleRate = rate.getSaleRate();
@@ -84,14 +70,7 @@ public class PrivateBank implements CurrencyService {
                 minRatesList.add(rate);
                 minSaleRate = rate.getSaleRate();
             }
-
         }
-        System.out.println("_______________________");
-
         return minRatesList;
     }
-
-
-
-
 }

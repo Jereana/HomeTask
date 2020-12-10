@@ -1,10 +1,5 @@
 package com.yeremenko.myProject;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class CurrencyHelper {
@@ -32,6 +27,4 @@ public class CurrencyHelper {
         }
         return CURRENCY_CODES_MAP.get(currency.toUpperCase());
     }
-
-
 }

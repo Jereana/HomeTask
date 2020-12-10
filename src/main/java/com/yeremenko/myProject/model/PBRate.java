@@ -6,8 +6,7 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PBRate {
-    public static String bankName = "Private bank";
-    public String bank;
+    public static final String BANK_NAME = "Private bank";
     public String date;
     public String currency;
     public int currencyCode;
@@ -15,24 +14,12 @@ public class PBRate {
 
     public List<ExchangeRate> exchangeRate;
 
-    public String getBank() {
-        return bank;
-    }
-
-    public void setBank(String bank) {
-        this.bank = bank;
-    }
-
     public String getDate() {
         return date;
     }
 
     public void setDate(String date) {
         this.date = date;
-    }
-
-    public String getBaseCurrency() {
-        return "UAH";
     }
 
     public List<ExchangeRate> getExchangeRate() {
@@ -44,7 +31,7 @@ public class PBRate {
     }
 
     public String getBankName() {
-        return bankName;
+        return BANK_NAME;
     }
 
     public String getCurrency() {
@@ -77,7 +64,7 @@ public class PBRate {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ExchangeRate {
-        private String currency; // валюта, трёх-символьное значение
+        private String currency;
         private String currencyCode;
         private double saleRate;
         private double purchaseRate;

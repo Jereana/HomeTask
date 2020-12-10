@@ -3,7 +3,6 @@ package com.yeremenko.myProject.banks;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import com.yeremenko.myProject.CurrencyHelper;
 import com.yeremenko.myProject.CurrencyService;
 import com.yeremenko.myProject.DateHelper;
 import com.yeremenko.myProject.RateMapper;
@@ -50,16 +49,9 @@ public class NBUxml implements CurrencyService {
             RateView rateView = getRateFor(date, currency);
             ratesList.add(rateView);
         }
-
         double minSaleRate = 1000;
-        System.out.println("All list of NBUxml rates:");
+
         for (RateView rate : ratesList) {
-
-            System.out.println("Bank: " + rate.getBank() +
-                    "; Date: " + rate.getDate() +
-                    "; Currency: " + rate.getCurrency() +
-                    "; Rate: " + rate.getSaleRate());
-
             if (minSaleRate == rate.getSaleRate()) {
                 minRatesList.add(rate);
                 minSaleRate = rate.getSaleRate();
@@ -68,15 +60,12 @@ public class NBUxml implements CurrencyService {
                 minRatesList.add(rate);
                 minSaleRate = rate.getSaleRate();
             }
-
         }
-        System.out.println("_______________________");
-
         return minRatesList;
     }
 
     private NBURate parseCurrentExchangeRateXML(Date date, String currency) {
-        String errorText = "";
+        String errorText;
         String dateStrUrl = DateHelper.convertDateToString(date, "yyyyMMdd");
         String dateStr = DateHelper.convertDateToString(date, "dd.MM.yyyy");
         String url = String.format("%s?date=%s&xml", BASE_URL, dateStrUrl);

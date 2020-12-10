@@ -1,6 +1,5 @@
 package com.yeremenko.myProject.banks;
 
-import com.yeremenko.myProject.CurrencyHelper;
 import com.yeremenko.myProject.CurrencyService;
 import com.yeremenko.myProject.DateHelper;
 import com.yeremenko.myProject.RateMapper;
@@ -39,14 +38,7 @@ public class NBU implements CurrencyService {
         }
 
         double minSaleRate = 1000;
-        System.out.println("All list of NBU rates:");
         for (RateView rate : ratesList) {
-
-            System.out.println("Bank: " + rate.getBank() +
-                    "; Date: " + rate.getDate() +
-                    "; Currency: " + rate.getCurrency() +
-                    "; Rate: " + rate.getSaleRate());
-
             if (minSaleRate == rate.getSaleRate()) {
                 minRatesList.add(rate);
                 minSaleRate = rate.getSaleRate();
@@ -55,10 +47,7 @@ public class NBU implements CurrencyService {
                 minRatesList.add(rate);
                 minSaleRate = rate.getSaleRate();
             }
-
         }
-        System.out.println("_______________________");
-
         return minRatesList;
     }
 
@@ -66,9 +55,7 @@ public class NBU implements CurrencyService {
     private NBURate parseCurrentExchangeRateJson(Date date, String currency) {
         String dateStrUrl = DateHelper.convertDateToString(date, "yyyyMMdd");
         String dateStr = DateHelper.convertDateToString(date, "dd.MM.yyyy");
-        int currencyCode = CurrencyHelper.getCurrencyCode(currency);
-        String errorText = "";
-
+        String errorText;
         String fullUrl = String.format("%s?date=%s&json", BASE_URL, dateStrUrl);
 
         String resultJson = parseUrl(fullUrl);

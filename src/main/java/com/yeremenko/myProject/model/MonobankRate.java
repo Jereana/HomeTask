@@ -1,7 +1,6 @@
 package com.yeremenko.myProject.model;
 
 import java.sql.Timestamp;
-import java.util.Date;
 
 public class MonobankRate {
 
@@ -11,7 +10,7 @@ public class MonobankRate {
     public double rateSell;
     public String currency; // валюта
     public int currencyCodeA;
-    public static String bankName = "MonoBank";
+    public static final String BANK_NAME = "MonoBank";
     public String errorText;
 
 
@@ -33,7 +32,7 @@ public class MonobankRate {
     }
 
     public static String getBank() {
-        return bankName;
+        return BANK_NAME;
     }
 
     public String getDate() {

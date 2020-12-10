@@ -8,7 +8,7 @@ public class RateView {
     private String date;
     private double saleRate;
     private double purchaseRate;
-    public String errorText;
+    private String errorText;
 
     public RateView(String bank, String currency, int currencyCode, String date, double saleRate, double purchaseRate, String errorText) {
         this.bank = bank;
@@ -74,4 +74,11 @@ public class RateView {
         this.currencyCode = currencyCode;
     }
 
+    public String getErrorText() {
+        return errorText;
+    }
+
+    public void setErrorText(String errorText) {
+        this.errorText = errorText;
+    }
 }

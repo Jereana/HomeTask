@@ -5,11 +5,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NBURate {
 
-    public static String bankName = "NBU";
+    public static final String BANK_NAME = "NBU";
     public String exchangeDate;
     public double rate;
-    public String currency; // валюта буквы
-    public int currencyCode; // код валюты
+    public String currency;
+    public int currencyCode;
     public String errorText;
 
     public NBURate(String exchangeDate, double rate, String currency, int currencyCode) {
@@ -26,7 +26,7 @@ public class NBURate {
     }
 
     public static String getBankName() {
-        return bankName;
+        return BANK_NAME;
     }
 
     public void setCurrency(String currency) {

@@ -22,7 +22,6 @@ public class JsonUtils {
             String inputLine;
             while ((inputLine = in.readLine()) != null) {
                 stringBuilder.append(inputLine);
-                System.out.println(inputLine);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -30,7 +29,6 @@ public class JsonUtils {
         return stringBuilder.toString();
     }
 
-    // создаем объект URL из указанной в параметре строки
     public static URL createUrl(String link) {
         try {
             return new URL(link);
@@ -41,7 +39,6 @@ public class JsonUtils {
     }
 
 
-//jackson
     public static <T> T parseJsonWithJackson(String json, Class<T> bankType) {
 
         ObjectMapper mapper = new ObjectMapper();

@@ -7,19 +7,20 @@ import com.yeremenko.myProject.views.RateView;
 
 import java.util.List;
 
-// принимает на вход разные рейты и отдает на вью
 public class RateMapper {
 
     public static RateView from(PBRate pbRate){
+        if (pbRate == null) {
+            return null;
+        }
 
         List<PBRate.ExchangeRate> exchangeRateList = pbRate.getExchangeRate();
-
+        String errorText = pbRate.getErrorText()==null?"":pbRate.getErrorText();
         PBRate.ExchangeRate exchangeRate;
         double saleRate = 0;
         double purchaseRate = 0;
-        String errorText = pbRate.getErrorText()==null?"":pbRate.getErrorText();
 
-        if (exchangeRateList.size()!=0) {
+        if (!exchangeRateList.isEmpty()) {
             exchangeRate = exchangeRateList
                     .stream()
                     .filter(rate -> pbRate.getCurrency().equals(rate.getCurrency()))
@@ -32,7 +33,7 @@ public class RateMapper {
             }
         }
 
-        return new RateView(pbRate.getBankName(),
+        return new RateView(PBRate.BANK_NAME,
                 pbRate.getCurrency(),
                 CurrencyHelper.getCurrencyCode(pbRate.getCurrency()),
                 pbRate.getDate(),
@@ -46,7 +47,7 @@ public class RateMapper {
             return null;
         }
 
-        return new RateView(MonobankRate.bankName,
+        return new RateView(MonobankRate.BANK_NAME,
                 monobankRate.getCurrency(),
                 monobankRate.getCurrencyCodeA(),
                 monobankRate.getDate(),
@@ -55,12 +56,12 @@ public class RateMapper {
                 monobankRate.getErrorText());
     }
 
-    public static RateView from(NBURate nbuRate) {// нацбанк
+    public static RateView from(NBURate nbuRate) {
         if (nbuRate == null) {
             return null;
         }
 
-        return new RateView(NBURate.bankName,
+        return new RateView(NBURate.BANK_NAME,
                 nbuRate.getCurrency(),
                 nbuRate.getCurrencyCode(),
                 nbuRate.getExchangeDate(),
