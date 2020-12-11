@@ -36,13 +36,18 @@ public class DateHelper {
         return date;
     }
 
-    public static List<Date> getDatesList(int lastDaysCount, Date dateFrom, Date dateTo){
+    public static List<Date> getDatesList(Date date, int lastDaysCount, Date dateFrom, Date dateTo){
         List<Date> datesList = new ArrayList<>();
-        if (lastDaysCount != 0) {
-            Date todayDate = DateHelper.stringToDate(DateHelper.convertDateToString(null, "dd.MM.yyyy"));
-            datesList = DateHelper.getDatesListByLastDaysCount(lastDaysCount, todayDate);
-        } else if (dateFrom!=null && dateTo != null) {
-            datesList = DateHelper.getDatesListByPeriod(dateFrom, dateTo);
+        if (date!= null || (date == null && lastDaysCount==0 && dateFrom==null && dateTo == null)){
+            Date todayDate = DateHelper.stringToDate(DateHelper.convertDateToString(date, "dd.MM.yyyy"));
+            datesList.add(todayDate);
+        } else {
+            if (lastDaysCount != 0) {
+                Date todayDate = DateHelper.stringToDate(DateHelper.convertDateToString(null, "dd.MM.yyyy"));
+                datesList = DateHelper.getDatesListByLastDaysCount(lastDaysCount, todayDate);
+            } else if (dateFrom != null && dateTo != null) {
+                datesList = DateHelper.getDatesListByPeriod(dateFrom, dateTo);
+            }
         }
         return datesList;
     }

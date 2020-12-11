@@ -22,9 +22,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 @Qualifier("nbu_xml")
 @Component
@@ -36,32 +34,6 @@ public class NBUxml implements CurrencyService {
     public RateView getRateFor(Date date, String currency) {
         NBURate nbuRate = parseCurrentExchangeRateXML(date, currency);// currency код получить из currencyHelper
         return RateMapper.from(nbuRate);
-    }
-
-    @Override
-    public List<RateView> getBestRate(Date dateFrom, Date dateTo, String currency, int lastDaysCount) {
-
-        List<RateView> ratesList = new ArrayList<>();
-        List<Date> datesList = DateHelper.getDatesList(lastDaysCount, dateFrom, dateTo);
-        List<RateView> minRatesList = new ArrayList<>();
-
-        for (Date date : datesList) {
-            RateView rateView = getRateFor(date, currency);
-            ratesList.add(rateView);
-        }
-        double minSaleRate = 1000;
-
-        for (RateView rate : ratesList) {
-            if (minSaleRate == rate.getSaleRate()) {
-                minRatesList.add(rate);
-                minSaleRate = rate.getSaleRate();
-            } else if (minSaleRate > rate.getSaleRate()) {
-                minRatesList.clear();
-                minRatesList.add(rate);
-                minSaleRate = rate.getSaleRate();
-            }
-        }
-        return minRatesList;
     }
 
     private NBURate parseCurrentExchangeRateXML(Date date, String currency) {

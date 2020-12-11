@@ -10,10 +10,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 
 @RestController
 @RequestMapping("/rates")
 public class ExchangeRateController {
+
+    private static final Logger LOGGER = Logger.getLogger(ExchangeRateController.class.getName());
 
     @Qualifier("mono")
     @Autowired
@@ -42,7 +47,7 @@ public class ExchangeRateController {
         Date dateFrom = DateHelper.stringToDate(dFrom);
         Date dateTo = DateHelper.stringToDate(dTo);
 
-        List<RateView> ratesList = new ArrayList<>();
+        List<RateView> ratesList;
 
         currency = currency == null ? "USD" : currency.toUpperCase();
 
@@ -50,84 +55,80 @@ public class ExchangeRateController {
             lastDaysCount = 0;
         }
 
-        List<Date> datesList = DateHelper.getDatesList(lastDaysCount, dateFrom, dateTo);
+        List<Date> datesList = DateHelper.getDatesList(date, lastDaysCount, dateFrom, dateTo);
 
-        if (datesList.isEmpty()) {
-            ratesList.add(privateBank.getRateFor(date, currency));
-            ratesList.add(monoBank.getRateFor(date, currency));
-            ratesList.add(nbu.getRateFor(date, currency));
-            ratesList.add(nbuXml.getRateFor(date, currency));
-        } else
-            if ((date == null) && (lastDaysCount!=0 || (dateFrom!=null && dateTo != null))){
+        ratesList = getBestRate(datesList, currency);
 
-                ratesList.addAll(privateBank.getBestRate(dateFrom,dateTo,currency,lastDaysCount));
-                ratesList.addAll(monoBank.getBestRate(dateFrom, dateTo, currency, lastDaysCount));
-                ratesList.addAll(nbu.getBestRate(dateFrom, dateTo, currency, lastDaysCount));
-                ratesList.addAll(nbuXml.getBestRate(dateFrom, dateTo, currency, lastDaysCount));
-                }
         return ratesList;
     }
-/*
-    private List<RateView> getBestRate(Date dateFrom, Date dateTo, String currency, int lastDaysCount) {
+
+    private List<RateView> getBestRate( List<Date> datesList, String currency) {
 
         List<RateView> ratesList = new ArrayList<>();
-        List<Date> datesList = DateHelper.getDatesList(lastDaysCount, dateFrom, dateTo);
-        List<RateView> minRatesListMono = new ArrayList<>();
-        List<RateView> minRatesListPB = new ArrayList<>();
-        List<RateView> minRatesListNBU = new ArrayList<>();
-        List<RateView> minRatesListNBUXml = new ArrayList<>();
 
-
+        final RateView[] minRateMono = new RateView[1];
+        final RateView[] minRatePB = new RateView[1];
+        final RateView[] minRateNBU = new RateView[1];
+        final RateView[] minRateNBUXml = new RateView[1];
         for (Date date : datesList) {
-            RateView rateViewMono = getRateMono(date, currency);
-            ratesList.add(rateViewMono);
+            Thread threadMono = new Thread(() -> {
+                RateView rateMono = monoBank.getRateFor(date, currency);
+                    minRateMono[0] = getMinRate(minRateMono[0],rateMono);
+            });
+            threadMono.start();
 
-            RateView rateViewPB = getRatePB(date, currency);
-        }
+            Thread threadPB = new Thread(() -> {
+                RateView ratePB = privateBank.getRateFor(date, currency);
+                minRatePB[0] = getMinRate(minRatePB[0], ratePB);
 
-        double minSaleRate = 1000;
-        System.out.println("All list of NBUxml rates:");
-        for (RateView rate : ratesList) {
+            });
+            threadPB.start();
 
-            System.out.println("Bank: " + rate.getBank() +
-                    "; Date: " + rate.getDate() +
-                    "; Currency: " + rate.getCurrency() +
-                    "; Rate: " + rate.getSaleRate());
+            Thread threadNBU = new Thread(() -> {
+                RateView rateNBU = nbu.getRateFor(date, currency);
+                minRateNBU[0] = getMinRate(minRateNBU[0], rateNBU);
+            });
+            threadNBU.start();
 
-            if (minSaleRate == rate.getSaleRate()) {
-                minRatesList.add(rate);
-                minSaleRate = rate.getSaleRate();
-            } else if (minSaleRate > rate.getSaleRate()) {
-                minRatesList.clear();
-                minRatesList.add(rate);
-                minSaleRate = rate.getSaleRate();
+            Thread threadNBUXml = new Thread(() -> {
+                RateView rateNBUXml = nbuXml.getRateFor(date, currency);
+                minRateNBUXml[0] = getMinRate(minRateNBUXml[0], rateNBUXml);
+            });
+            threadNBUXml.start();
+
+            try {
+                threadMono.join();
+                threadPB.join();
+                threadNBU.join();
+                threadNBUXml.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-
+            LOGGER.log(Level.INFO, "______________________");
         }
-        System.out.println("_______________________");
 
-        return minRatesList;
-    }
-*/
+        ratesList.add(minRatePB[0]);
+        ratesList.add(minRateMono[0]);
+        ratesList.add(minRateNBU[0]);
+        ratesList.add(minRateNBUXml[0]);
 
-    @GetMapping("/pb")
-    public RateView getRate(@RequestParam(value = "date", required = false) String dateStr,
-                            @RequestParam(value = "currency", required = false) String currency) {
-        Date date = DateHelper.stringToDate(dateStr);
-        return privateBank.getRateFor(date, currency.toUpperCase());
+        return ratesList;
     }
 
-
-    @GetMapping("/mono")
-    public RateView getRateRestTemplate(@RequestParam(value = "date", required = false) String dateStr,
-                                        @RequestParam(value = "currency", required = false) String currency) {
-        return monoBank.getRateFor(null, currency);
-    }
-
-    @GetMapping("/nbu")
-    public RateView getRateJson(@RequestParam(value = "date", required = false) String dateStr,
-                                @RequestParam(value = "currency", required = false) String currency) {
-        Date date = DateHelper.stringToDate(dateStr);
-        return nbu.getRateFor(date,currency);
+    private RateView getMinRate(RateView minRate, RateView currentRate) {
+        if (minRate != null && minRate.getSaleRate()!=0) {
+            if (minRate.getSaleRate() == currentRate.getSaleRate()) {
+                minRate.setDate(minRate.getDate() + ";" + currentRate.getDate());
+            } else if (minRate.getSaleRate() > currentRate.getSaleRate()) {
+                minRate = currentRate;
+            }
+        } else {
+            minRate = currentRate;
+        }
+        LOGGER.log(Level.INFO, new StringBuilder().append(currentRate.getBank())
+                .append("; ")
+                .append(currentRate.getSaleRate())
+                .append("; ").append(currentRate.getDate()).toString());
+        return minRate;
     }
 }

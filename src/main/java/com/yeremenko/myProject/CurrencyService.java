@@ -10,5 +10,4 @@ public interface CurrencyService {
 
     RateView getRateFor(Date date, String currency);
 
-    List<RateView> getBestRate(Date dateFrom, Date dateTo, String currency, int lastDaysCount);
 }

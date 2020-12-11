@@ -44,20 +44,6 @@ public class MonoBank implements CurrencyService {
         return RateMapper.from(monobankRate);
     }
 
-    @Override
-    public List<RateView> getBestRate(Date dateFrom, Date dateTo, String currency, int lastDaysCount) {
-
-        List<RateView> ratesList = new ArrayList<>();
-        String todayDateStr = DateHelper.convertDateToString(null,DATE_FORMAT);
-        Date todayDate = stringToDate(todayDateStr);
-        Boolean dateIsInPeriod = DateHelper.checkDateIsInPeriod(dateFrom, dateTo, todayDate);
-        if ((lastDaysCount > 0) || dateIsInPeriod){
-            RateView rateView = getRateFor(todayDate, currency);
-            ratesList.add(rateView);
-        }
-        return ratesList;
-    }
-
     private static MonobankRate parseCurrentExchangeRateRestTemplate(int currencyCode) {
         RestTemplate restTemplate = new RestTemplate();
         try {
