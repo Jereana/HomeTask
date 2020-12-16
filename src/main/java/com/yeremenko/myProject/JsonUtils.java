@@ -3,14 +3,19 @@ package com.yeremenko.myProject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yeremenko.myProject.controllers.ExchangeRateController;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class JsonUtils {
+
+    private static final Logger LOGGER = Logger.getLogger(JsonUtils.class.getName());
 
     public static String parseUrl(String urlStr) {
         URL url = createUrl(urlStr);
@@ -45,9 +50,8 @@ public class JsonUtils {
         try {
             return mapper.readValue(json, bankType);
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, e.getMessage());
         }
         return null;
     }
-
 }

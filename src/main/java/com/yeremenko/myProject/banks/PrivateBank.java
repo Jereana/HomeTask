@@ -6,20 +6,24 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import com.yeremenko.myProject.*;
 import com.yeremenko.myProject.model.PBRate;
 import com.yeremenko.myProject.views.RateView;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-@Qualifier("pb")
 @Component
 public class PrivateBank implements CurrencyService {
-
+    private static final Logger LOGGER = Logger.getLogger(PrivateBank.class.getName());
     public static final String BASE_URL = "https://api.privatbank.ua/p24api/exchange_rates";
 
     @Override
-    public RateView getRateFor(Date date, String currency) {
-        String dateStr = DateHelper.convertDateToString(date,"dd.MM.yyyy");
+    public RateView getRateFor(LocalDate date, String currency) {
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        String dateStr = date.format(dtf);
+        String errorText;
         int currencyCode = CurrencyHelper.getCurrencyCode(currency);
         PBRate pbRate = new PBRate();
         try {
@@ -29,16 +33,19 @@ public class PrivateBank implements CurrencyService {
             pbRate = JsonUtils.parseJsonWithJackson(response.getBody(), PBRate.class);
 
             if(pbRate != null && pbRate.exchangeRate.isEmpty())  {
-                pbRate.setErrorText("No rate for date " + dateStr + ". ");
+                errorText = "Bank PrivateBank: date " + date.toString() + "; currency " +
+                        currency + "; No rate for date.";
+                LOGGER.log(Level.INFO, errorText);
             }
         } catch (UnirestException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, e.getMessage());
         }
         if (pbRate!=null) {
-            pbRate.setDate(dateStr);
+            pbRate.setDate(date.toString());
             pbRate.setCurrency(currency);
             pbRate.setCurrencyCode(currencyCode);
         }
         return RateMapper.from(pbRate);
+
     }
 }

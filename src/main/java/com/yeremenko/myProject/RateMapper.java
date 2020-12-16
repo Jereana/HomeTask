@@ -6,8 +6,11 @@ import com.yeremenko.myProject.model.PBRate;
 import com.yeremenko.myProject.views.RateView;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class RateMapper {
+    private static final Logger LOGGER = Logger.getLogger(RateMapper.class.getName());
 
     public static RateView from(PBRate pbRate){
         if (pbRate == null) {
@@ -15,7 +18,7 @@ public class RateMapper {
         }
 
         List<PBRate.ExchangeRate> exchangeRateList = pbRate.getExchangeRate();
-        String errorText = pbRate.getErrorText();
+        String errorText;
         PBRate.ExchangeRate exchangeRate;
         double saleRate = 0;
         double purchaseRate = 0;
@@ -29,10 +32,9 @@ public class RateMapper {
                 saleRate = exchangeRate.getSaleRate()==0?exchangeRate.getSaleRateNB():exchangeRate.getSaleRate();
                 purchaseRate = exchangeRate.getPurchaseRate()==0?exchangeRate.getPurchaseRateNB():exchangeRate.getPurchaseRate();
             } else {
-                if (errorText==null) {
-                    errorText = "";
-                }
-                errorText = errorText.concat(" No rate for currency " + pbRate.getCurrency() + ".");
+                errorText = "Bank PrivateBank: date " + pbRate.getDate() + "; currency " +
+                        pbRate.getCurrency() + "; No rate for currency.";
+                LOGGER.log(Level.INFO, errorText);
             }
         }
 
@@ -41,8 +43,7 @@ public class RateMapper {
                 CurrencyHelper.getCurrencyCode(pbRate.getCurrency()),
                 pbRate.getDate(),
                 saleRate,
-                purchaseRate,
-                errorText);
+                purchaseRate);
     }
 
     public static RateView from(MonobankRate monobankRate) {
@@ -53,10 +54,9 @@ public class RateMapper {
         return new RateView(MonobankRate.BANK_NAME,
                 monobankRate.getCurrency(),
                 monobankRate.getCurrencyCodeA(),
-                monobankRate.getDate(),
+                monobankRate.getDate().toString(),
                 monobankRate.getRateSell(),
-                monobankRate.getRateBuy(),
-                monobankRate.getErrorText());
+                monobankRate.getRateBuy());
     }
 
     public static RateView from(NBURate nbuRate) {
@@ -67,9 +67,8 @@ public class RateMapper {
         return new RateView(NBURate.BANK_NAME,
                 nbuRate.getCurrency(),
                 nbuRate.getCurrencyCode(),
-                nbuRate.getExchangeDate(),
+                nbuRate.getExchangeDate().toString(),
                 nbuRate.getRate(),
-                nbuRate.getRate(),
-                nbuRate.getErrorText());
+                nbuRate.getRate());
     }
 }

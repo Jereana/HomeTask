@@ -1,7 +1,6 @@
 package com.yeremenko.myProject.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -10,7 +9,6 @@ public class PBRate {
     public String date;
     public String currency;
     public int currencyCode;
-    public String errorText;
 
     public List<ExchangeRate> exchangeRate;
 
@@ -52,14 +50,6 @@ public class PBRate {
 
     public void setCurrencyCode(int currencyCode) {
         this.currencyCode = currencyCode;
-    }
-
-    public String getErrorText() {
-        return errorText;
-    }
-
-    public void setErrorText(String errorText) {
-        this.errorText = errorText;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

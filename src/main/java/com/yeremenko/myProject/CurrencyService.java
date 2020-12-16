@@ -1,13 +1,14 @@
 package com.yeremenko.myProject;
 
 import com.yeremenko.myProject.views.RateView;
+import java.time.LocalDate;
 
-import java.text.ParseException;
-import java.util.Date;
-import java.util.List;
-
+@FunctionalInterface
 public interface CurrencyService {
 
-    RateView getRateFor(Date date, String currency);
+    RateView getRateFor(LocalDate date, String currency);
 
+    default String getName(){
+        return this.getClass().getName();
+    }
 }

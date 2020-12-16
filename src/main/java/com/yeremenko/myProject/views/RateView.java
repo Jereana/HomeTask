@@ -5,19 +5,17 @@ public class RateView {
     private String bank;
     private String currency;
     private int currencyCode;
-    private String date;
     private double saleRate;
     private double purchaseRate;
-    private String errorText;
+    private String date;
 
-    public RateView(String bank, String currency, int currencyCode, String date, double saleRate, double purchaseRate, String errorText) {
+   public RateView(String bank, String currency, int currencyCode, String date, double saleRate, double purchaseRate) {
         this.bank = bank;
         this.currency = currency;
         this.currencyCode = currencyCode;
         this.date = date;
         this.saleRate = saleRate;
         this.purchaseRate = purchaseRate;
-        this.errorText = errorText;
     }
 
     public RateView(String bank, String currency, String date) {
@@ -74,11 +72,4 @@ public class RateView {
         this.currencyCode = currencyCode;
     }
 
-    public String getErrorText() {
-        return errorText;
-    }
-
-    public void setErrorText(String errorText) {
-        this.errorText = errorText;
-    }
 }

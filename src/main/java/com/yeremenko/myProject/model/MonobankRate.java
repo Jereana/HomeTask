@@ -1,20 +1,20 @@
 package com.yeremenko.myProject.model;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 
 public class MonobankRate {
 
     public Timestamp timestamp;
-    public String date;
+
+    public LocalDate date;
     public double rateBuy;
     public double rateSell;
-    public String currency; // валюта
+    public String currency;
     public int currencyCodeA;
     public static final String BANK_NAME = "MonoBank";
-    public String errorText;
 
-
-    public MonobankRate(String date, double rateBuy, double rateSell, int currencyCodeA) {
+    public MonobankRate(LocalDate date, double rateBuy, double rateSell, int currencyCodeA) {
         this.date = date;
         this.rateBuy = rateBuy;
         this.rateSell = rateSell;
@@ -24,22 +24,28 @@ public class MonobankRate {
     public MonobankRate() {
     }
 
-    public MonobankRate(String date, String currency, int currencyCode, String errorText) {
+    public MonobankRate(LocalDate date, String currency, int currencyCode) {
         this.date = date;
         this.currency = currency;
         this.currencyCodeA = currencyCode;
-        this.errorText = errorText;
+    }
+
+    public MonobankRate(LocalDate date, double rateSell, String currency, int currencyCodeA) {
+        this.date = date;
+        this.rateSell = rateSell;
+        this.currency = currency;
+        this.currencyCodeA = currencyCodeA;
     }
 
     public static String getBank() {
         return BANK_NAME;
     }
 
-    public String getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 
@@ -57,14 +63,6 @@ public class MonobankRate {
 
     public void setRateSell(double rateSell) {
         this.rateSell = rateSell;
-    }
-
-    public String getErrorText() {
-        return errorText;
-    }
-
-    public void setErrorText(String errorText) {
-        this.errorText = errorText;
     }
 
     public String getCurrency() {

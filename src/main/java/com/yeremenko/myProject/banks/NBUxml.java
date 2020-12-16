@@ -4,11 +4,9 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.yeremenko.myProject.CurrencyService;
-import com.yeremenko.myProject.DateHelper;
 import com.yeremenko.myProject.RateMapper;
 import com.yeremenko.myProject.model.NBURate;
 import com.yeremenko.myProject.views.RateView;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -22,24 +20,29 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-@Qualifier("nbu_xml")
 @Component
 public class NBUxml implements CurrencyService {
 
     public static final String BASE_URL = "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange";
+    private static final Logger LOGGER = Logger.getLogger(NBUxml.class.getName());
 
     @Override
-    public RateView getRateFor(Date date, String currency) {
-        NBURate nbuRate = parseCurrentExchangeRateXML(date, currency);// currency код получить из currencyHelper
+    public RateView getRateFor(LocalDate date, String currency) {
+        NBURate nbuRate = parseCurrentExchangeRateXML(date, currency);
         return RateMapper.from(nbuRate);
     }
 
-    private NBURate parseCurrentExchangeRateXML(Date date, String currency) {
+    private NBURate parseCurrentExchangeRateXML(LocalDate date, String currency) {
+
         String errorText;
-        String dateStrUrl = DateHelper.convertDateToString(date, "yyyyMMdd");
-        String dateStr = DateHelper.convertDateToString(date, "dd.MM.yyyy");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd");
+        String dateStrUrl = date.format(dtf);
+
         String url = String.format("%s?date=%s&xml", BASE_URL, dateStrUrl);
 
         try {
@@ -62,22 +65,26 @@ public class NBUxml implements CurrencyService {
                                 .getElementsByTagName("cc")
                                 .item(0)
                                 .getTextContent().equals(currency)) {
-                            return new NBURate(eElement.getElementsByTagName("exchangedate").item(0).getTextContent(),
+                            return new NBURate(date,
                                     Double.parseDouble(eElement.getElementsByTagName("rate").item(0).getTextContent()),
                                     eElement.getElementsByTagName("cc").item(0).getTextContent(),
                                     Integer.parseInt(eElement.getElementsByTagName("r030").item(0).getTextContent()));
                         }
+
                     }
                 }
-                errorText = "No rate for currency " + currency;
+                errorText = "Bank NBU: date " + date.toString() + "; currency " +
+                        currency + "; No rate for currency.";
+                LOGGER.log(Level.INFO, errorText);
             } else {
-                errorText = "No rate for date " + dateStr;
+                errorText = "Bank NBU: date " + date.toString() + "; currency " +
+                            currency + ";  No rate for date.";
+                LOGGER.log(Level.INFO, errorText);
             }
         } catch (SAXException | UnirestException | ParserConfigurationException | IOException e) {
-            e.printStackTrace();
-            return new NBURate(dateStr, currency, e.getMessage());
+            LOGGER.log(Level.WARNING, e.getMessage(), e);
+            return new NBURate(date, currency);
         }
-
-        return new NBURate(dateStr, currency, errorText);
+        return new NBURate(date, currency);
     }
 }

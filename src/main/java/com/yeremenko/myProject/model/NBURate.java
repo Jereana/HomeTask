@@ -2,27 +2,27 @@ package com.yeremenko.myProject.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.time.LocalDate;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NBURate {
 
     public static final String BANK_NAME = "NBU";
-    public String exchangeDate;
+    public LocalDate exchangeDate;
     public double rate;
     public String currency;
     public int currencyCode;
-    public String errorText;
 
-    public NBURate(String exchangeDate, double rate, String currency, int currencyCode) {
+    public NBURate(LocalDate exchangeDate, double rate, String currency, int currencyCode) {
         this.exchangeDate = exchangeDate;
         this.rate = rate;
         this.currency = currency;
         this.currencyCode = currencyCode;
     }
 
-    public NBURate(String exchangeDate, String currency, String errorText) {
+    public NBURate(LocalDate exchangeDate, String currency) {
         this.exchangeDate = exchangeDate;
         this.currency = currency;
-        this.errorText = errorText;
     }
 
     public static String getBankName() {
@@ -33,19 +33,11 @@ public class NBURate {
         this.currency = currency;
     }
 
-    public String getErrorText() {
-        return errorText;
-    }
-
-    public void setErrorText(String errorText) {
-        this.errorText = errorText;
-    }
-
-    public String getExchangeDate() {
+    public LocalDate getExchangeDate() {
         return exchangeDate;
     }
 
-    public void setExchangeDate(String exchangeDate) {
+    public void setExchangeDate(LocalDate exchangeDate) {
         this.exchangeDate = exchangeDate;
     }
 
