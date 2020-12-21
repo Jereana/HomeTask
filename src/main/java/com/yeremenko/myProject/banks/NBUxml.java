@@ -73,17 +73,16 @@ public class NBUxml implements CurrencyService {
 
                     }
                 }
-                errorText = "Bank NBU: date " + date.toString() + "; currency " +
-                        currency + "; No rate for currency.";
-                LOGGER.log(Level.INFO, errorText);
+                errorText = String.format("Bank NBU: date %s; currency %s; No rate for currency.", date.toString(), currency);
             } else {
-                errorText = "Bank NBU: date " + date.toString() + "; currency " +
-                            currency + ";  No rate for date.";
-                LOGGER.log(Level.INFO, errorText);
+                errorText = String.format("Bank NBU: date %s; currency %s; No rate for date.", date.toString(), currency);
             }
         } catch (SAXException | UnirestException | ParserConfigurationException | IOException e) {
             LOGGER.log(Level.WARNING, e.getMessage(), e);
             return new NBURate(date, currency);
+        }
+        if (errorText != null) {
+            LOGGER.log(Level.INFO, errorText);
         }
         return new NBURate(date, currency);
     }

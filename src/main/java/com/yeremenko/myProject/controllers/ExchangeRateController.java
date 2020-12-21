@@ -4,6 +4,7 @@ import com.yeremenko.myProject.CurrencyService;
 import com.yeremenko.myProject.DateHelper;
 import com.yeremenko.myProject.views.RateView;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +21,9 @@ import java.util.logging.Logger;
 public class ExchangeRateController {
 
     private static final Logger LOGGER = Logger.getLogger(ExchangeRateController.class.getName());
-    private static final int POOL_SIZE = 4;
+
+    @Value("${exchangeRateController.poolSize}")
+    private int poolSize;
 
     @Autowired
     private List<CurrencyService> currencyServices;
@@ -63,13 +66,12 @@ public class ExchangeRateController {
         return minRate;
     }
 
-
     private List<RateView> getBestRate( List<LocalDate> datesList, String currency) {
 
         List<RateView> ratesList = new ArrayList<>();
         List<Future<RateView>> futures = new ArrayList<>();
 
-        ExecutorService executorService = Executors.newFixedThreadPool(POOL_SIZE);
+        ExecutorService executorService = Executors.newFixedThreadPool(poolSize);
         for (CurrencyService service : currencyServices) {
             Callable<RateView> callable = () -> {
                 final RateView[] minRate = new RateView[1];

@@ -48,11 +48,9 @@ public class NBU implements CurrencyService {
                             (Integer) objects.get("r030"));
                 }
             }
-            errorText = "Bank NBU: date " + date.toString() + "; currency " +
-                    currency + "; No rate for currency.";
+            errorText = String.format("Bank NBU: date %s; currency %s; No rate for currency.", date.toString(), currency);
         } else {
-            errorText = "Bank NBU: date " + date.toString() + "; currency " +
-                    currency + ";  No rate for date.";
+            errorText = String.format("Bank NBU: date %s; currency %s; No rate for date.", date.toString(), currency);
         }
         if (errorText != null) {
             LOGGER.log(Level.INFO, errorText);

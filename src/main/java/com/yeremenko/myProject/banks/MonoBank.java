@@ -27,8 +27,7 @@ public class MonoBank implements CurrencyService {
         String errorText = null;
         if (!todayDate.equals(parameterDate)) {
             monobankRate = new MonobankRate(parameterDate, currency, currencyCode);
-            errorText = "Bank MonoBank: date " + parameterDate.toString() + "; currency " +
-                    currency + "; No rate for date.";
+            errorText = String.format("Bank MonoBank: date %s; currency %s; No rate for date.", parameterDate.toString(), currency);
         } else {
             monobankRate = parseCurrentExchangeRateRestTemplate(currencyCode);
             if (monobankRate != null) {
@@ -37,8 +36,7 @@ public class MonoBank implements CurrencyService {
                 monobankRate.setDate(parameterDate);
             } else {
                 monobankRate = new MonobankRate(parameterDate, currency, currencyCode);
-                errorText = "Bank MonoBank: date " + parameterDate.toString() + "; currency " +
-                        currency + "; No rate for currency.";
+                errorText = String.format("Bank MonoBank: date %s; currency %s; No rate for currency.", parameterDate.toString(), currency);
             }
         }
         if (errorText!= null) {

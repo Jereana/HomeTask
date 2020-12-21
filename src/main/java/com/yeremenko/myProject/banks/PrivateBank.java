@@ -33,8 +33,7 @@ public class PrivateBank implements CurrencyService {
             pbRate = JsonUtils.parseJsonWithJackson(response.getBody(), PBRate.class);
 
             if(pbRate != null && pbRate.exchangeRate.isEmpty())  {
-                errorText = "Bank PrivateBank: date " + date.toString() + "; currency " +
-                        currency + "; No rate for date.";
+                errorText = String.format("Bank PrivateBank: date %s; currency %s; No rate for date.", date.toString(), currency);
                 LOGGER.log(Level.INFO, errorText);
             }
         } catch (UnirestException e) {
@@ -46,6 +45,5 @@ public class PrivateBank implements CurrencyService {
             pbRate.setCurrencyCode(currencyCode);
         }
         return RateMapper.from(pbRate);
-
     }
 }
