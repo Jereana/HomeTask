@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 public class ExchangeRateController {
 
     private static final Logger LOGGER = Logger.getLogger(ExchangeRateController.class.getName());
+    private static final int POOL_SIZE = 4;
 
     @Autowired
     private List<CurrencyService> currencyServices;
@@ -57,10 +58,8 @@ public class ExchangeRateController {
         } else {
             minRate = currentRate;
         }
-        LOGGER.log(Level.INFO, new StringBuilder().append(currentRate.getBank())
-                .append("; ")
-                .append(currentRate.getSaleRate())
-                .append("; ").append(currentRate.getDate()).toString());
+        String logString = String.format("%s; %f; %s", currentRate.getBank(), currentRate.getSaleRate(), currentRate.getDate());
+        LOGGER.log(Level.INFO, logString);
         return minRate;
     }
 
@@ -70,27 +69,31 @@ public class ExchangeRateController {
         List<RateView> ratesList = new ArrayList<>();
         List<Future<RateView>> futures = new ArrayList<>();
 
-        int poolSize = 4;
-        ExecutorService executorService = Executors.newFixedThreadPool(poolSize);
+        ExecutorService executorService = Executors.newFixedThreadPool(POOL_SIZE);
         for (CurrencyService service : currencyServices) {
             Callable<RateView> callable = () -> {
                 final RateView[] minRate = new RateView[1];
                 for (LocalDate date : datesList) {
-                    LOGGER.log(Level.INFO, service.getName().concat(" is starting"));
-                     RateView rateView = service.getRateFor(date, currency);
-                    LOGGER.log(Level.INFO, service.getName().concat(" finished"));
+                    String strToLogStart = service.getName().concat(" is starting");
+                    LOGGER.log(Level.INFO, strToLogStart);
+                    RateView rateView = service.getRateFor(date, currency);
+                    String strToLogFinish = service.getName().concat(" finished");
+                    LOGGER.log(Level.INFO, strToLogFinish);
                     minRate[0] = getMinRate(minRate[0], rateView);
                 }
                 return minRate[0];
             };
             futures.add(executorService.submit(callable));
         }
-        try {
-            for (Future<RateView> future: futures) {
+        for (Future<RateView> future: futures) {
+            try {
                 ratesList.add(future.get());
+            } catch (InterruptedException | ExecutionException e) {
+                LOGGER.log(Level.SEVERE, e.getMessage());
+                if (e.getClass().equals(InterruptedException.class)) {
+                    Thread.currentThread().interrupt();
+                }
             }
-        } catch (InterruptedException | ExecutionException e) {
-            LOGGER.log(Level.SEVERE, e.getMessage());
         }
         return ratesList;
     }
