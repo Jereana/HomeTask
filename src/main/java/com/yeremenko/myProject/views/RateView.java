@@ -24,6 +24,9 @@ public class RateView {
         this.date = date;
     }
 
+    public RateView() {
+    }
+
     public String getBank() {
         return bank;
     }

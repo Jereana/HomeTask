@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,10 +28,10 @@ public class ExchangeRateController {
     private List<CurrencyService> currencyServices;
 
     @GetMapping("/all")
-    public List<RateView> getRates(@RequestParam(value = "date", required = false)
+    public List<RateView> getRates(@RequestParam (value = "date", required = false)
                                         @DateTimeFormat(pattern = "d.MM.yyyy") LocalDate date,
                                    @RequestParam(value = "currency", required = false) String currency,
-                                   @RequestParam(value = "dateFrom", required = false)
+                                    @RequestParam(value = "dateFrom", required = false)
                                        @DateTimeFormat(pattern = "d.MM.yyyy") LocalDate dFrom,
                                    @RequestParam(value = "dateTo", required = false)
                                        @DateTimeFormat(pattern = "d.MM.yyyy") LocalDate dTo,
@@ -74,20 +73,22 @@ public class ExchangeRateController {
         ExecutorService executorService = Executors.newFixedThreadPool(poolSize);
         for (CurrencyService service : currencyServices) {
             Callable<RateView> callable = () -> {
-                final RateView[] minRate = new RateView[1];
+                RateView minRate = new RateView();
                 for (LocalDate date : datesList) {
                     String strToLogStart = service.getName().concat(" is starting");
                     LOGGER.log(Level.INFO, strToLogStart);
                     RateView rateView = service.getRateFor(date, currency);
                     String strToLogFinish = service.getName().concat(" finished");
                     LOGGER.log(Level.INFO, strToLogFinish);
-                    minRate[0] = getMinRate(minRate[0], rateView);
+                    minRate = getMinRate(minRate,rateView);
                 }
-                return minRate[0];
+                return minRate;
             };
-            futures.add(executorService.submit(callable));
+           futures.add(executorService.submit(callable));
         }
-        for (Future<RateView> future: futures) {
+        executorService.shutdown();
+
+        for (Future<RateView> future : futures) {
             try {
                 ratesList.add(future.get());
             } catch (InterruptedException | ExecutionException e) {
